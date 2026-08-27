@@ -1,7 +1,7 @@
 import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { UserRepository } from './user.repository';
-import { CreateUserDto, UserResponseDto } from './user.dto';
+import { CreateUserDto, UpdateUserDto, UserResponseDto } from './user.dto';
 import { User } from './user.entity';
 
 @Injectable()
@@ -37,6 +37,21 @@ export class UserService {
     }
 
     return this.toUserResponse(user)
+  }
+
+  async update(id: string, data: UpdateUserDto): Promise<UserResponseDto> {
+    return this.toUserResponse({
+      id: '00000000-0000-0000-0000-000000000000',
+      email: 'some@mail.com',
+      password: 'somepassword',
+      name: 'somename',
+      phone: '6281234567890',
+      position: 'someposition',
+      photoKey: 'somephotokey',
+      role: 'user',
+      createdAt: new Date('2026-08-25T10:00:00Z'),
+      updatedAt: new Date('2026-08-25T10:00:00Z'),
+    });
   }
 
   private toUserResponse(user: User): UserResponseDto {

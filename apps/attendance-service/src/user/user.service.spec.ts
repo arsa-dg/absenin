@@ -4,7 +4,7 @@ import { UserRepository } from './user.repository';
 import { ConflictException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { User } from './user.entity';
-import { CreateUserDto, UserResponseDto } from './user.dto';
+import { CreateUserDto, UpdateUserDto, UserResponseDto } from './user.dto';
 
 jest.mock('bcrypt', () => ({
   hash: jest.fn().mockResolvedValue('hashed_somepassword'),
@@ -42,6 +42,12 @@ describe('UserService', () => {
     createdAt: new Date('2026-08-25T10:00:00Z'),
     updatedAt: new Date('2026-08-25T10:00:00Z'),
   }
+  const updateUserDto: UpdateUserDto = {
+    name: 'updatedname',
+    phone: '6281234567891',
+    position: 'updatedposition',
+  }
+
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -125,6 +131,27 @@ describe('UserService', () => {
       expect(result).toEqual(mockServiceUserResponse);
 
       expect(mockRepository.findById).toHaveBeenCalledWith('00000000-0000-0000-0000-000000000000');
+    });
+  });
+
+  describe('update', () => {
+    it('should throw NotFoundException when user does not exist', async () => {
+      mockRepository.update.mockResolvedValue(null);
+
+      await expect(
+        service.update('00000000-0000-0000-0000-000000000000', updateUserDto)
+      ).rejects.toThrow(NotFoundException);
+
+      expect(mockRepository.findById).toHaveBeenCalledWith('00000000-0000-0000-0000-000000000000', updateUserDto);
+    });
+    
+    it('should return user when user exists', async () => {
+      mockRepository.update.mockResolvedValue(mockRepositoryUserResult);
+
+      const result = await service.update('00000000-0000-0000-0000-000000000000', updateUserDto);
+      expect(result).toEqual(mockServiceUserResponse);
+
+      expect(mockRepository.findById).toHaveBeenCalledWith('00000000-0000-0000-0000-000000000000', updateUserDto);
     });
   });
 });

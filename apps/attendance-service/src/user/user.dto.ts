@@ -31,3 +31,19 @@ export class UserResponseDto {
   createdAt!: Date;
   updatedAt!: Date;
 }
+
+export class UpdateUserDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  name?: string;
+
+  @IsOptional()
+  @IsPhoneNumber()
+  phone?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  position?: string;
+}

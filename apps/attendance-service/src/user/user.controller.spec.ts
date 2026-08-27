@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
-import { CreateUserDto, UserResponseDto } from './user.dto';
+import { CreateUserDto, UpdateUserDto, UserResponseDto } from './user.dto';
 
 describe('UserController', () => {
   let controller: UserController;
@@ -9,6 +9,7 @@ describe('UserController', () => {
   const mockService = {
     create: jest.fn(),
     findById: jest.fn(),
+    update: jest.fn(),
   };
 
   const mockUserResponse: UserResponseDto = {
@@ -66,6 +67,24 @@ describe('UserController', () => {
       expect(result).toEqual(mockUserResponse);
 
       expect(mockService.findById).toHaveBeenCalledWith(userId);
+    });
+  });
+
+  describe('update', () => {
+    const userId = '00000000-0000-0000-0000-000000000000';
+    const updateUserDto: UpdateUserDto = {
+      name: 'updatedname',
+      phone: '6281234567891',
+      position: 'updatedposition',
+    }
+
+    it('should call userService.findById and return the user', async () => {
+      mockService.update.mockResolvedValue(mockUserResponse);
+
+      const result = await controller.update(userId, updateUserDto);
+      expect(result).toEqual(mockUserResponse);
+
+      expect(mockService.update).toHaveBeenCalledWith(userId, updateUserDto);
     });
   });
 });
