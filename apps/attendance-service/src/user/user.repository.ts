@@ -5,11 +5,16 @@ import { Repository } from 'typeorm';
 import { User } from './user.entity';
 
 @Injectable()
-export class UsersRepository {
+export class UserRepository {
   constructor(
     @InjectRepository(User)
     private readonly repository: Repository<User>,
   ) {}
+  
+  async create(user: Partial<User>): Promise<User> {
+    const entity = this.repository.create(user);
+    return this.repository.save(entity);
+  }
 
   async findById(id: string): Promise<User | null> {
     return this.repository.findOne({
@@ -29,11 +34,6 @@ export class UsersRepository {
         createdAt: 'DESC',
       },
     });
-  }
-
-  async create(user: Partial<User>): Promise<User> {
-    const entity = this.repository.create(user);
-    return this.repository.save(entity);
   }
 
   async update(
