@@ -40,18 +40,12 @@ export class UserService {
   }
 
   async update(id: string, data: UpdateUserDto): Promise<UserResponseDto> {
-    return this.toUserResponse({
-      id: '00000000-0000-0000-0000-000000000000',
-      email: 'some@mail.com',
-      password: 'somepassword',
-      name: 'somename',
-      phone: '6281234567890',
-      position: 'someposition',
-      photoKey: 'somephotokey',
-      role: 'user',
-      createdAt: new Date('2026-08-25T10:00:00Z'),
-      updatedAt: new Date('2026-08-25T10:00:00Z'),
-    });
+    const user = await this.userRepository.update(id, data);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return this.toUserResponse(user)
   }
 
   private toUserResponse(user: User): UserResponseDto {

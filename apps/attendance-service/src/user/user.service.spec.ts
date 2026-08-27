@@ -142,7 +142,7 @@ describe('UserService', () => {
         service.update('00000000-0000-0000-0000-000000000000', updateUserDto)
       ).rejects.toThrow(NotFoundException);
 
-      expect(mockRepository.findById).toHaveBeenCalledWith('00000000-0000-0000-0000-000000000000', updateUserDto);
+      expect(mockRepository.update).toHaveBeenCalledWith('00000000-0000-0000-0000-000000000000', updateUserDto);
     });
     
     it('should return user when user exists', async () => {
@@ -151,7 +151,7 @@ describe('UserService', () => {
       const result = await service.update('00000000-0000-0000-0000-000000000000', updateUserDto);
       expect(result).toEqual(mockServiceUserResponse);
 
-      expect(mockRepository.findById).toHaveBeenCalledWith('00000000-0000-0000-0000-000000000000', updateUserDto);
+      expect(mockRepository.update).toHaveBeenCalledWith('00000000-0000-0000-0000-000000000000', updateUserDto);
     });
   });
 });

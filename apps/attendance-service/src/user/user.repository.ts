@@ -40,7 +40,14 @@ export class UserRepository {
     id: string,
     data: Partial<User>,
   ): Promise<User | null> {
-    await this.repository.update(id, data);
-    return this.findById(id);
+    const user = await this.repository.preload({
+      id,
+      ...data,
+    });
+    if (!user) {
+      return null;
+    }
+
+    return this.repository.save(user);
   }
 }

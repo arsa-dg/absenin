@@ -30,6 +30,6 @@ export class UserController {
     @Body()
     data: UpdateUserDto,
   ) {
-
+    return this.userService.update(id, data);
   }
 }
