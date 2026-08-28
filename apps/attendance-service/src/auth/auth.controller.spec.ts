@@ -14,8 +14,8 @@ describe('AuthController', () => {
   };
 
   const mockAuthResponse: AuthResponseDto = {
-    access_token: 'accesstoken',
-    refresh_token: 'refrestoken',
+    accessToken: 'accesstoken',
+    refreshToken: 'refrestoken',
   }
 
   beforeEach(async () => {
@@ -42,7 +42,7 @@ describe('AuthController', () => {
     it('should set auth cookies', async () => {
       mockService.login.mockResolvedValue(mockAuthResponse);
 
-      await controller.login(loginDto);
+      await controller.login(loginDto, mockResponse as any);
 
       expect(mockService.login).toHaveBeenCalledWith(loginDto);
       expect(

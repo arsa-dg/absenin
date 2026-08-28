@@ -9,6 +9,6 @@ export class LoginDto {
 }
 
 export class AuthResponseDto {
-  access_token!: string;
-  refresh_token!: string;
+  accessToken!: string;
+  refreshToken!: string;
 }

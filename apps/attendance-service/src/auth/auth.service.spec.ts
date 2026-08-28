@@ -1,11 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { AuthRepository } from './auth.repository';
-import { UserRepository } from 'src/user/user.repository';
+import { UserRepository } from '../user/user.repository';
 import { HasherService } from './hasher.service';
 import { JwtService } from '@nestjs/jwt';
-import { User } from 'src/user/user.entity';
-import { UserRole } from 'src/user/user.constant';
+import { User } from '../user/user.entity';
+import { UserRole } from '../user/user.constant';
 import { AuthResponseDto, LoginDto } from './auth.dto';
 import { InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
 import { Auth } from './auth.entity';
@@ -57,8 +57,8 @@ describe('AuthService', () => {
     updatedAt: new Date('2026-08-25T10:00:00Z'),
   }
   const mockServiceAuthResponse: AuthResponseDto = {
-    access_token: 'accesstoken',
-    refresh_token: 'refreshtoken',
+    accessToken: 'accessToken',
+    refreshToken: 'refreshToken',
   }
 
   beforeEach(async () => {
@@ -117,7 +117,7 @@ describe('AuthService', () => {
     it('should create access and refresh token and store auth', async () => {
       mockUserRepository.findByEmail.mockResolvedValue(mockRepositoryUserResult);
       mockHasherService.compare.mockResolvedValue(true);
-      mockJWTService.signAsync.mockRejectedValueOnce('access-token').mockResolvedValueOnce('refresh-token');
+      mockJWTService.signAsync.mockResolvedValueOnce('accessToken').mockResolvedValueOnce('refreshToken');
       mockHasherService.hash.mockResolvedValue('hashed_refreshtoken');
       mockAuthRepository.create.mockResolvedValue(mockRepositoryAuthResult)
 
