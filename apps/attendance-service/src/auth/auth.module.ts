@@ -7,8 +7,8 @@ import { AuthRepository } from './auth.repository';
 import { UserModule } from '../user/user.module';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
-import { HasherService } from './hasher.service';
 import { JwtStrategy } from './auth.strategy';
+import { HasherModule } from '../hasher/hasher.module';
 
 @Module({
   imports: [
@@ -16,20 +16,16 @@ import { JwtStrategy } from './auth.strategy';
       Auth,
     ]),
     UserModule,
+    HasherModule,
     PassportModule,
-    JwtModule.register({
-      global: true,
-    }),
+    JwtModule.register({}),
   ],
   controllers: [AuthController],
   providers: [
     AuthService,
     AuthRepository,
-    HasherService,
     JwtStrategy,
   ],
-  exports: [
-    HasherService
-  ],
+  exports: [],
 })
 export class AuthModule {}

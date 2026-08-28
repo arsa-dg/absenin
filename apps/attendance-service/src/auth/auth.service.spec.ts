@@ -2,12 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { AuthRepository } from './auth.repository';
 import { UserRepository } from '../user/user.repository';
-import { HasherService } from './hasher.service';
+import { HasherService } from '../hasher/hasher.service';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../user/user.entity';
 import { UserRole } from '../user/user.constant';
 import { AuthResponseDto, LoginDto } from './auth.dto';
-import { InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
+import { UnauthorizedException } from '@nestjs/common';
 import { Auth } from './auth.entity';
 
 describe('AuthService', () => {

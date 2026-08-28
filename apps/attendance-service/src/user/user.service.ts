@@ -1,13 +1,14 @@
 import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
 import { UserRepository } from './user.repository';
 import { CreateUserDto, UpdateUserDto, UserResponseDto } from './user.dto';
 import { User } from './user.entity';
+import { HasherService } from '../hasher/hasher.service';
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
+    private readonly hasherService: HasherService,
   ) {}
 
   async create(data: CreateUserDto): Promise<UserResponseDto> {
@@ -16,8 +17,7 @@ export class UserService {
       throw new ConflictException('Email already in use');
     }
 
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(data.password, saltRounds);
+    const hashedPassword = await this.hasherService.hash(data.password);
 
     const user = await this.userRepository.create({
       ...data,
