@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { HasherModule } from './hasher/hasher.module';
+import { AttendanceModule } from './attendance/attendance.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { HasherModule } from './hasher/hasher.module';
     UserModule,
     AuthModule,
     HasherModule,
+    AttendanceModule,
   ],
   controllers: [AppController],
   providers: [AppService],
