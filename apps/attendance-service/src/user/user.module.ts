@@ -5,11 +5,13 @@ import { UserRepository } from './user.repository';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './user.entity';
 import { HasherModule } from '../hasher/hasher.module';
+import { RabbitmqModule } from '../common/rabbitmq/rabbitmq.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
     HasherModule,
+    RabbitmqModule,
   ],
   controllers: [UserController],
   providers: [

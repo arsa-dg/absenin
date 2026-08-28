@@ -19,6 +19,9 @@ describe('UserService', () => {
   const mockHasherService = {
     hash: jest.fn(),
   }
+  const mockLogClient = {
+    emit: jest.fn(),
+  }
 
   const mockRepositoryUserResult: User = {
     id: '00000000-0000-0000-0000-000000000000',
@@ -59,6 +62,10 @@ describe('UserService', () => {
         {
           provide: HasherService,
           useValue: mockHasherService,
+        },
+        {
+          provide: 'LOG_SERVICE',
+          useValue: mockLogClient,
         },
       ],
     }).compile();
@@ -157,6 +164,7 @@ describe('UserService', () => {
       expect(result).toEqual(mockServiceUserResponse);
 
       expect(mockRepository.update).toHaveBeenCalledWith('00000000-0000-0000-0000-000000000000', updateUserDto);
+      expect(mockLogClient.emit).toHaveBeenCalled();
     });
   });
 });

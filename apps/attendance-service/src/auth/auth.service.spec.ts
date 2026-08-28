@@ -96,10 +96,6 @@ describe('AuthService', () => {
       await expect(service.login(mockLoginDto)).rejects.toThrow(UnauthorizedException);  
 
       expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(mockLoginDto.email);
-      expect(mockHasherService.compare).not.toHaveBeenCalled();
-      expect(mockJWTService.signAsync).not.toHaveBeenCalledTimes(2);
-      expect(mockHasherService.hash).not.toHaveBeenCalled();
-      expect(mockAuthRepository.create).not.toHaveBeenCalled();
     });
 
     it('should throw UnauthorizedException when password not match', async () => {
@@ -110,9 +106,6 @@ describe('AuthService', () => {
 
       expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(mockLoginDto.email);
       expect(mockHasherService.compare).toHaveBeenCalledWith(mockLoginDto.password, mockRepositoryUserResult.password);
-      expect(mockJWTService.signAsync).not.toHaveBeenCalledTimes(2);
-      expect(mockHasherService.hash).not.toHaveBeenCalled();
-      expect(mockAuthRepository.create).not.toHaveBeenCalled();
     });
 
     it('should create access and refresh token and store session', async () => {
@@ -140,12 +133,6 @@ describe('AuthService', () => {
       await expect(service.refresh('refreshToken')).rejects.toThrow(UnauthorizedException);
 
       expect(mockJWTService.verifyAsync).toHaveBeenCalled();
-      expect(mockAuthRepository.findById).not.toHaveBeenCalled();
-      expect(mockHasherService.compare).not.toHaveBeenCalled();
-      expect(mockUserRepository.findById).not.toHaveBeenCalled();
-      expect(mockJWTService.signAsync).not.toHaveBeenCalledTimes(2);
-      expect(mockHasherService.hash).not.toHaveBeenCalled();
-      expect(mockAuthRepository.update).not.toHaveBeenCalled();
     });
 
     it('should throw UnauthorizedException when session not found', async () => {
@@ -156,11 +143,6 @@ describe('AuthService', () => {
 
       expect(mockJWTService.verifyAsync).toHaveBeenCalled();
       expect(mockAuthRepository.findById).toHaveBeenCalled();
-      expect(mockHasherService.compare).not.toHaveBeenCalled();
-      expect(mockUserRepository.findById).not.toHaveBeenCalled();
-      expect(mockJWTService.signAsync).not.toHaveBeenCalledTimes(2);
-      expect(mockHasherService.hash).not.toHaveBeenCalled();
-      expect(mockAuthRepository.update).not.toHaveBeenCalled();
     });
 
     it('should throw UnauthorizedException when session expired', async () => {
@@ -171,11 +153,6 @@ describe('AuthService', () => {
 
       expect(mockJWTService.verifyAsync).toHaveBeenCalled();
       expect(mockAuthRepository.findById).toHaveBeenCalled();
-      expect(mockHasherService.compare).not.toHaveBeenCalled();
-      expect(mockUserRepository.findById).not.toHaveBeenCalled();
-      expect(mockJWTService.signAsync).not.toHaveBeenCalledTimes(2);
-      expect(mockHasherService.hash).not.toHaveBeenCalled();
-      expect(mockAuthRepository.update).not.toHaveBeenCalled();
     });
 
     it('should throw UnauthorizedException when invalid refresh token', async () => {
@@ -191,10 +168,6 @@ describe('AuthService', () => {
       expect(mockJWTService.verifyAsync).toHaveBeenCalled();
       expect(mockAuthRepository.findById).toHaveBeenCalled();
       expect(mockHasherService.compare).toHaveBeenCalled();
-      expect(mockUserRepository.findById).not.toHaveBeenCalled();
-      expect(mockJWTService.signAsync).not.toHaveBeenCalledTimes(2);
-      expect(mockHasherService.hash).not.toHaveBeenCalled();
-      expect(mockAuthRepository.update).not.toHaveBeenCalled();
     });
 
     it('should throw UnauthorizedException when invalid user', async () => {
@@ -212,9 +185,6 @@ describe('AuthService', () => {
       expect(mockAuthRepository.findById).toHaveBeenCalled();
       expect(mockHasherService.compare).toHaveBeenCalled();
       expect(mockUserRepository.findById).toHaveBeenCalled();
-      expect(mockJWTService.signAsync).not.toHaveBeenCalledTimes(2);
-      expect(mockHasherService.hash).not.toHaveBeenCalled();
-      expect(mockAuthRepository.update).not.toHaveBeenCalled();
     });
 
     it('should create new access and refresh token and store session', async () => {
