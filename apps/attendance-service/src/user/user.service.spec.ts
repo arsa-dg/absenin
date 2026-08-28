@@ -2,14 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UserService } from './user.service';
 import { UserRepository } from './user.repository';
 import { ConflictException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
 import { User } from './user.entity';
 import { CreateUserDto, UpdateUserDto, UserResponseDto } from './user.dto';
 import { UserRole } from './user.constant';
-
-jest.mock('bcrypt', () => ({
-  hash: jest.fn().mockResolvedValue('hashed_somepassword'),
-}));
+import { HasherService } from '../hasher/hasher.service';
 
 describe('UserService', () => {
   let service: UserService;
@@ -20,6 +16,9 @@ describe('UserService', () => {
     findByEmail: jest.fn(),
     update: jest.fn(),
   };
+  const mockHasherService = {
+    hash: jest.fn(),
+  }
 
   const mockRepositoryUserResult: User = {
     id: '00000000-0000-0000-0000-000000000000',
@@ -57,6 +56,10 @@ describe('UserService', () => {
           provide: UserRepository,
           useValue: mockRepository,
         },
+        {
+          provide: HasherService,
+          useValue: mockHasherService,
+        },
       ],
     }).compile();
 
@@ -79,18 +82,19 @@ describe('UserService', () => {
       await expect(service.create(createUserDto)).rejects.toThrow(ConflictException);
 
       expect(mockRepository.findByEmail).toHaveBeenCalledWith(createUserDto.email);
-      expect(bcrypt.hash).not.toHaveBeenCalled();
+      expect(mockHasherService.hash).not.toHaveBeenCalled();
       expect(mockRepository.create).not.toHaveBeenCalled();
     });
 
     it('should throw InternalServerErrorException when user creation fails', async () => {
       mockRepository.findByEmail.mockResolvedValue(null);
+      mockHasherService.hash.mockResolvedValue('hashed_somepassword');
       mockRepository.create.mockResolvedValue(null);
 
       await expect(service.create(createUserDto)).rejects.toThrow(InternalServerErrorException);
 
       expect(mockRepository.findByEmail).toHaveBeenCalledWith(createUserDto.email);
-      expect(bcrypt.hash).toHaveBeenCalledWith(createUserDto.password, 10);
+      expect(mockHasherService.hash).toHaveBeenCalledWith(createUserDto.password);
       expect(mockRepository.create).toHaveBeenCalledWith({
         ...createUserDto,
         password: 'hashed_somepassword',
@@ -99,13 +103,14 @@ describe('UserService', () => {
 
     it('should hash password and create a user successfully', async () => {
       mockRepository.findByEmail.mockResolvedValue(null);
+      mockHasherService.hash.mockResolvedValue('hashed_somepassword');
       mockRepository.create.mockResolvedValue(mockRepositoryUserResult);
 
       const result = await service.create(createUserDto);
       expect(result).toEqual(mockServiceUserResponse);
 
       expect(mockRepository.findByEmail).toHaveBeenCalledWith(createUserDto.email);
-      expect(bcrypt.hash).toHaveBeenCalledWith(createUserDto.password, 10);
+      expect(mockHasherService.hash).toHaveBeenCalledWith(createUserDto.password);
       expect(mockRepository.create).toHaveBeenCalledWith({
         ...createUserDto,
         password: 'hashed_somepassword',

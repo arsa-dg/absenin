@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthResponseDto, LoginDto } from './auth.dto';
 import { AuthService } from './auth.service';
+import { UnauthorizedException } from '@nestjs/common';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -17,8 +18,6 @@ describe('AuthController', () => {
   const mockResponse = {
     cookie: jest.fn(),
     clearCookie: jest.fn(),
-    status: jest.fn().mockReturnThis(),
-    json: jest.fn().mockImplementation((data) => data),
   };
 
   const mockAuthResponse: AuthResponseDto = {
@@ -58,10 +57,11 @@ describe('AuthController', () => {
   });
 
   describe('refresh', () => {
-    it('should unauthorized when refresh token is missing', async () => {
-      await controller.refresh({cookies: {}} as any, mockResponse as any);
+    it('should throw UnauthorizedException when refresh token is missing', async () => {
+      await expect(
+        controller.refresh({cookies: {}} as any, mockResponse as any)
+      ).rejects.toThrow(UnauthorizedException);
 
-      expect(mockResponse.status).toHaveBeenCalledWith(401);
       expect(mockService.refresh).not.toHaveBeenCalled();
       expect(mockResponse.cookie).not.toHaveBeenCalled();
     });

@@ -1,15 +1,20 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, UseGuards } from '@nestjs/common';
 
 import { UserService } from './user.service';
 import { CreateUserDto, UpdateUserDto } from './user.dto';
+import { JwtAuthGuard, RoleGuard } from '../auth/auth.guard';
+import { Roles } from '../auth/auth.decorator';
+import { UserRole } from './user.constant';
 
 @Controller('user')
+@UseGuards(JwtAuthGuard, RoleGuard)
 export class UserController {
   constructor(
     private readonly userService: UserService,
   ) {}
 
   @Post()
+  @Roles(UserRole.ADMIN)
   create(
     @Body()
     data: CreateUserDto,
@@ -18,6 +23,7 @@ export class UserController {
   }
 
   @Get(':id')
+  @Roles(UserRole.ADMIN)
   findById(
     @Param('id', new ParseUUIDPipe()) id: string,
   ) {
@@ -25,6 +31,7 @@ export class UserController {
   }
 
   @Patch(':id')
+  @Roles(UserRole.ADMIN)
   update(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body()
