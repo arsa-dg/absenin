@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, IsNull } from 'typeorm';
+import { Repository, IsNull, Between } from 'typeorm';
 
 import { Attendance } from './attendance.entity';
 
@@ -14,6 +14,24 @@ export class AttendanceRepository {
   async create(Attendance: Partial<Attendance>): Promise<Attendance> {
     const entity = this.repository.create(Attendance);
     return this.repository.save(entity);
+  }
+
+  async findAllByUserIdDateRange(
+    userId: string,
+    startDate: string,
+    endDate: string,
+  ): Promise<Attendance[]> {
+    const whereCondition: any = {
+      date: Between(startDate, endDate),
+      userId,
+    };
+
+    return this.repository.find({
+      where: whereCondition,
+      order: {
+        date: 'DESC',
+      },
+    });
   }
 
   async findByUserIdDate(userId: string, date: Date): Promise<Attendance | null> {

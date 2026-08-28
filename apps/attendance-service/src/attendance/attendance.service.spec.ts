@@ -5,12 +5,14 @@ import { Attendance } from './attendance.entity';
 import { BadRequestException, ConflictException } from '@nestjs/common';
 import { User } from '../user/user.entity';
 import { UserRole } from '../user/user.constant';
+import { GetAllAttendanceResponseDto } from './attendance.dto';
 
 describe('AttendanceService', () => {
   let service: AttendanceService;
 
   const mockRepository = {
     create: jest.fn(),
+    findAllByUserIdDateRange: jest.fn(),
     findByUserIdDate: jest.fn(),
     update: jest.fn(),
   };
@@ -36,6 +38,15 @@ describe('AttendanceService', () => {
     createdAt: new Date('2026-08-25T10:00:00Z'),
     updatedAt: new Date('2026-08-25T10:00:00Z'),
   }
+  const mockFindAllResult: GetAllAttendanceResponseDto = {
+    userId: '00000000-0000-0000-0000-000000000000',
+    attendances: [
+      {
+        date: new Date('2026-08-25T10:00:00Z'),
+        clockIn: new Date('2026-08-25T10:00:00Z'),
+      },
+    ]
+  }
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -59,6 +70,7 @@ describe('AttendanceService', () => {
       mockRepository.create.mockRejectedValue(uniqueConstraintError);
 
       await expect(service.create('00000000-0000-0000-0000-000000000000')).rejects.toThrow(ConflictException);
+      
       expect(mockRepository.findByUserIdDate).toHaveBeenCalled();
       expect(mockRepository.create).toHaveBeenCalled();
     });
@@ -68,6 +80,7 @@ describe('AttendanceService', () => {
       mockRepository.create.mockResolvedValue(mockRepositoryResult);
 
       await service.create('00000000-0000-0000-0000-000000000000');
+      
       expect(mockRepository.findByUserIdDate).toHaveBeenCalled();
       expect(mockRepository.create).toHaveBeenCalled();
     });
@@ -79,6 +92,7 @@ describe('AttendanceService', () => {
       });
 
       await expect(service.create('00000000-0000-0000-0000-000000000000')).rejects.toThrow(BadRequestException);
+      
       expect(mockRepository.findByUserIdDate).toHaveBeenCalled();
     });
 
@@ -87,8 +101,37 @@ describe('AttendanceService', () => {
       mockRepository.update.mockResolvedValue(mockRepositoryResult);
 
       await service.create('00000000-0000-0000-0000-000000000000');
+
       expect(mockRepository.findByUserIdDate).toHaveBeenCalled();
       expect(mockRepository.update).toHaveBeenCalled();
     });
   });
+
+  describe('findAll', () => {
+    it('should throw BadRequestException when date invalid', async () => {
+      await expect(service.findAll({
+        userId: '00000000-0000-0000-0000-000000000000',
+        role: 'USER',
+      }, {
+        startDate: '2026-08-31',
+        endDate: '2026-08-28',
+      })).rejects.toThrow(BadRequestException);
+      
+      expect(mockRepository.findAllByUserIdDateRange).not.toHaveBeenCalled();
+    });
+    
+    it('should findAll successfully', async () => {
+      mockRepository.findAllByUserIdDateRange.mockResolvedValue([
+        mockRepositoryResult,
+      ]);
+
+      const result = await service.findAll({
+        userId: '00000000-0000-0000-0000-000000000000',
+        role: 'ADMIN',
+      }, {});
+      expect(result).toEqual(mockFindAllResult);
+      
+      expect(mockRepository.findAllByUserIdDateRange).toHaveBeenCalled();
+    });
+  })
 });
