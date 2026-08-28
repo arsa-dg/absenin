@@ -3,14 +3,15 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  Unique,
   UpdateDateColumn,
 } from 'typeorm';
 
 @Entity('attendance')
+@Unique(['userId', 'date'])
 export class Attendance {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
@@ -27,7 +28,6 @@ export class Attendance {
   @JoinColumn({ name: 'user_id' })
   user!: User;
 
-  @Index()
   @Column({ name: 'date', type: 'date' })
   date!: Date;
 
