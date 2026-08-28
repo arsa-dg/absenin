@@ -1,7 +1,7 @@
-import { Body, Controller, Post, Res } from '@nestjs/common';
+import { Body, Controller, Post, Req, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthResponseDto, LoginDto } from './auth.dto';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -23,17 +23,39 @@ export class AuthController {
   }
 
   @Post('refresh')
-  refresh() {
+  async refresh(
+    @Req() request: Request,
+    @Res({ passthrough: true })
+    response: Response,
+  ) {
+    const refreshToken = request.cookies?.refresh_token;
+    if (!refreshToken) {
+      return response.status(401).json({ message: 'Refresh token missing' });
+    }
+
+    const newToken = await this.authService.refresh(refreshToken);
+    this.setCookie(response, newToken);
+
+    return { message:"success" }
   }
 
   @Post('logout')
-  logout() {
+  async logout(
+    @Req() request: Request,
+    @Res({ passthrough: true })
+    response: Response,
+  ) {
+    const refreshToken = request.cookies?.refresh_token;
+    if (refreshToken) {
+      await this.authService.logout(refreshToken);
+    }
+
+    this.clearCookie(response);
+
+    return { message:"success" }
   }
 
-  private setCookie(
-    response: Response,
-    token: AuthResponseDto,
-  ) {
+  private setCookie(response: Response,token: AuthResponseDto) {
     response.cookie(
       'access_token',
       token.accessToken,
@@ -52,6 +74,11 @@ export class AuthController {
         path: '/auth',
       },
     );
+  }
+
+  private clearCookie(response: Response) {
+    response.clearCookie('access_token');
+    response.clearCookie('refresh_token', {path: '/auth'});
   }
 
   private commonCookieOptions() {

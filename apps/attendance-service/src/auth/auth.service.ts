@@ -42,12 +42,70 @@ export class AuthService {
     return token;
   }
 
-  async refresh() {
+  async refresh(refreshToken: string): Promise<AuthResponseDto> {
+    let jwtPayload: {
+      sub: string,
+      sid: string,
+    }
 
+    try {
+      jwtPayload = await this.jwtService.verifyAsync(
+        refreshToken,
+        { secret: process.env.JWT_REFRESH_SECRET },
+      );
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    const session = await this.authRepository.findById(jwtPayload.sid);
+    if (!session) {
+      throw new UnauthorizedException('Invalid session');
+    }
+    if (session.expiresAt.getTime() < Date.now()) {
+      throw new UnauthorizedException('Session expired');
+    }
+
+    const validRefreshToken = await this.hasherService.compare(refreshToken, session.refreshToken);
+    if (!validRefreshToken) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    const user = await this.userRepository.findById(jwtPayload.sub);
+    if (!user) {
+      throw new UnauthorizedException('Invalid user');
+    }
+
+    const newToken = await this.createToken(user.id, session.id, user.role);
+    const hashedNewRefreshToken = await this.hasherService.hash(newToken.refreshToken);
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate()+7);
+
+    await this.authRepository.update(
+      session.id,
+      { refreshToken: hashedNewRefreshToken, expiresAt: expiresAt },
+    );
+
+    return newToken;
   }
 
-  async logout() {
+  async logout(refreshToken: string) {
+    let jwtPayload: {
+      sid: string;
+    };
 
+    try {
+      jwtPayload = await this.jwtService.verifyAsync(
+        refreshToken,
+        { secret: process.env.JWT_REFRESH_SECRET },
+      );
+    } catch {
+      return;
+    }
+
+    await this.authRepository.update(
+      jwtPayload.sid,
+      { revokedAt: new Date() },
+    );
   }
 
   private async createToken(
@@ -61,8 +119,7 @@ export class AuthService {
       type: 'access'
     }, {
       secret: process.env.JWT_ACCESS_SECRET,
-      expiresIn: (process.env.JWT_ACCESS_EXPIRES_IN ??
-        '15m') as JwtSignOptions['expiresIn'],
+      expiresIn: (process.env.JWT_ACCESS_EXPIRES_IN ?? '15m') as JwtSignOptions['expiresIn'],
     })
 
     const refreshToken = await this.jwtService.signAsync({
@@ -71,13 +128,9 @@ export class AuthService {
       type: 'refresh'
     }, {
       secret: process.env.JWT_REFRESH_SECRET,
-      expiresIn: (process.env.JWT_REFRESH_EXPIRES_IN ??
-        '7d') as JwtSignOptions['expiresIn'],
+      expiresIn: (process.env.JWT_REFRESH_EXPIRES_IN ?? '7d') as JwtSignOptions['expiresIn'],
     })
     
-    return {
-      accessToken,
-      refreshToken
-    }
+    return { accessToken, refreshToken }
   }
 }
