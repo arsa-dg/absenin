@@ -5,6 +5,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { UserRole } from './user.constant';
 
 @Entity('user')
 export class User {
@@ -29,8 +30,8 @@ export class User {
   @Column({ type: 'text', name: 'photo_key', nullable: true })
   photoKey!: string | null;
 
-  @Column({ default: 'USER' })
-  role!: string;
+  @Column({ default: UserRole.USER })
+  role!: UserRole;
 
   @CreateDateColumn({ type: 'timestamptz', name: 'created_at' })
   createdAt!: Date;

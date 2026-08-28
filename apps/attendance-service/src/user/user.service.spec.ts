@@ -5,6 +5,7 @@ import { ConflictException, InternalServerErrorException, NotFoundException } fr
 import * as bcrypt from 'bcrypt';
 import { User } from './user.entity';
 import { CreateUserDto, UpdateUserDto, UserResponseDto } from './user.dto';
+import { UserRole } from './user.constant';
 
 jest.mock('bcrypt', () => ({
   hash: jest.fn().mockResolvedValue('hashed_somepassword'),
@@ -28,7 +29,7 @@ describe('UserService', () => {
     phone: '6281234567890',
     position: 'someposition',
     photoKey: 'somephotokey',
-    role: 'user',
+    role: UserRole.USER,
     createdAt: new Date('2026-08-25T10:00:00Z'),
     updatedAt: new Date('2026-08-25T10:00:00Z'),
   }
@@ -47,7 +48,6 @@ describe('UserService', () => {
     phone: '6281234567891',
     position: 'updatedposition',
   }
-
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
