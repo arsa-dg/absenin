@@ -1,5 +1,8 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import { AttendanceRepository } from './attendance.repository';
+import { AttendanceResponseDto, GetAllAttendanceRequestDto, GetAllAttendanceResponseDto } from './attendance.dto';
+import { Attendance } from './attendance.entity';
+import { UserRole } from '../user/user.constant';
 
 @Injectable()
 export class AttendanceService {
@@ -32,5 +35,60 @@ export class AttendanceService {
     }
     
     await this.attendanceRepository.update(todayAttendance.id, { clockOut: now });
+  }
+
+  async findAll(
+    currentUser: { userId: string; role: string },
+    data: GetAllAttendanceRequestDto,
+  ): Promise<GetAllAttendanceResponseDto> {
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const startDate: string = data.startDate ?? this.formatDate(firstDayOfMonth);
+    const endDate: string = data.endDate ?? this.formatDate(now);
+
+    if (startDate > endDate) {
+      throw new BadRequestException('startDate cannot be after endDate');
+    }
+
+    const targetUserId = currentUser.role === UserRole.USER ? currentUser.userId :
+      (data.userId ? data.userId : currentUser.userId);
+
+    const attendances = await this.attendanceRepository.findAllByUserIdDateRange(
+      targetUserId,
+      startDate,
+      endDate,
+    )
+    return this.toGetAllAttendanceResponseDto(currentUser.role, targetUserId, attendances);
+  }
+
+  private toGetAllAttendanceResponseDto(
+    role: string,
+    userId: string, 
+    attendances: Attendance[],
+  ): GetAllAttendanceResponseDto {
+    let responseUserId;
+    if (role === UserRole.ADMIN) {
+      responseUserId = userId
+    }
+
+    const attendancesDto: AttendanceResponseDto[] = attendances.map(
+    (attendance: Attendance): AttendanceResponseDto => ({
+      date: attendance.date,
+      clockIn: attendance.clockIn,
+      clockOut: attendance.clockOut,
+    }))
+
+    return {
+      userId: responseUserId,
+      attendances: attendancesDto,
+    };
+  }
+
+  private formatDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 }
