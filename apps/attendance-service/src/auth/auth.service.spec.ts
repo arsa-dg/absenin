@@ -20,6 +20,7 @@ describe('AuthService', () => {
   };
   const mockUserRepository = {
     findByEmail: jest.fn(),
+    findById: jest.fn(),
   };
   const mockHasherService = {
     hash: jest.fn(),
@@ -114,12 +115,12 @@ describe('AuthService', () => {
       expect(mockAuthRepository.create).not.toHaveBeenCalled();
     });
 
-    it('should create access and refresh token and store auth', async () => {
+    it('should create access and refresh token and store session', async () => {
       mockUserRepository.findByEmail.mockResolvedValue(mockRepositoryUserResult);
       mockHasherService.compare.mockResolvedValue(true);
       mockJWTService.signAsync.mockResolvedValueOnce('accessToken').mockResolvedValueOnce('refreshToken');
       mockHasherService.hash.mockResolvedValue('hashed_refreshtoken');
-      mockAuthRepository.create.mockResolvedValue(mockRepositoryAuthResult)
+      mockAuthRepository.create.mockResolvedValue(mockRepositoryAuthResult);
 
       const result = await service.login(mockLoginDto);
       expect(result).toEqual(mockServiceAuthResponse);
@@ -129,6 +130,135 @@ describe('AuthService', () => {
       expect(mockJWTService.signAsync).toHaveBeenCalledTimes(2);
       expect(mockHasherService.hash).toHaveBeenCalled();
       expect(mockAuthRepository.create).toHaveBeenCalled();
+    });
+  })
+
+  describe('refresh', () => {
+    it('should throw UnauthorizedException when invalid refresh token', async () => {
+      mockJWTService.verifyAsync.mockRejectedValueOnce(new Error('Invalid token'));
+
+      await expect(service.refresh('refreshToken')).rejects.toThrow(UnauthorizedException);
+
+      expect(mockJWTService.verifyAsync).toHaveBeenCalled();
+      expect(mockAuthRepository.findById).not.toHaveBeenCalled();
+      expect(mockHasherService.compare).not.toHaveBeenCalled();
+      expect(mockUserRepository.findById).not.toHaveBeenCalled();
+      expect(mockJWTService.signAsync).not.toHaveBeenCalledTimes(2);
+      expect(mockHasherService.hash).not.toHaveBeenCalled();
+      expect(mockAuthRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('should throw UnauthorizedException when session not found', async () => {
+      mockJWTService.verifyAsync.mockResolvedValueOnce({ sid: '00000000-0000-0000-0000-000000000000' });
+      mockAuthRepository.findById.mockResolvedValueOnce(null);
+
+      await expect(service.refresh('refreshToken')).rejects.toThrow(UnauthorizedException);
+
+      expect(mockJWTService.verifyAsync).toHaveBeenCalled();
+      expect(mockAuthRepository.findById).toHaveBeenCalled();
+      expect(mockHasherService.compare).not.toHaveBeenCalled();
+      expect(mockUserRepository.findById).not.toHaveBeenCalled();
+      expect(mockJWTService.signAsync).not.toHaveBeenCalledTimes(2);
+      expect(mockHasherService.hash).not.toHaveBeenCalled();
+      expect(mockAuthRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('should throw UnauthorizedException when session expired', async () => {
+      mockJWTService.verifyAsync.mockResolvedValueOnce({ sid: '00000000-0000-0000-0000-000000000000' });
+      mockAuthRepository.findById.mockResolvedValueOnce(mockRepositoryAuthResult);
+
+      await expect(service.refresh('refreshToken')).rejects.toThrow(UnauthorizedException);
+
+      expect(mockJWTService.verifyAsync).toHaveBeenCalled();
+      expect(mockAuthRepository.findById).toHaveBeenCalled();
+      expect(mockHasherService.compare).not.toHaveBeenCalled();
+      expect(mockUserRepository.findById).not.toHaveBeenCalled();
+      expect(mockJWTService.signAsync).not.toHaveBeenCalledTimes(2);
+      expect(mockHasherService.hash).not.toHaveBeenCalled();
+      expect(mockAuthRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('should throw UnauthorizedException when invalid refresh token', async () => {
+      mockJWTService.verifyAsync.mockResolvedValueOnce({ sid: '00000000-0000-0000-0000-000000000000' });
+      mockAuthRepository.findById.mockResolvedValueOnce({
+        ...mockRepositoryAuthResult,
+        expiresAt: new Date(),
+      });
+      mockHasherService.compare.mockResolvedValueOnce(false);
+
+      await expect(service.refresh('refreshToken')).rejects.toThrow(UnauthorizedException);
+
+      expect(mockJWTService.verifyAsync).toHaveBeenCalled();
+      expect(mockAuthRepository.findById).toHaveBeenCalled();
+      expect(mockHasherService.compare).toHaveBeenCalled();
+      expect(mockUserRepository.findById).not.toHaveBeenCalled();
+      expect(mockJWTService.signAsync).not.toHaveBeenCalledTimes(2);
+      expect(mockHasherService.hash).not.toHaveBeenCalled();
+      expect(mockAuthRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('should throw UnauthorizedException when invalid user', async () => {
+      mockJWTService.verifyAsync.mockResolvedValueOnce({ sid: '00000000-0000-0000-0000-000000000000' });
+      mockAuthRepository.findById.mockResolvedValueOnce({
+        ...mockRepositoryAuthResult,
+        expiresAt: new Date(),
+      });
+      mockHasherService.compare.mockResolvedValueOnce(true);
+      mockUserRepository.findById.mockResolvedValueOnce(null);
+
+      await expect(service.refresh('refreshToken')).rejects.toThrow(UnauthorizedException);
+
+      expect(mockJWTService.verifyAsync).toHaveBeenCalled();
+      expect(mockAuthRepository.findById).toHaveBeenCalled();
+      expect(mockHasherService.compare).toHaveBeenCalled();
+      expect(mockUserRepository.findById).toHaveBeenCalled();
+      expect(mockJWTService.signAsync).not.toHaveBeenCalledTimes(2);
+      expect(mockHasherService.hash).not.toHaveBeenCalled();
+      expect(mockAuthRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('should create new access and refresh token and store session', async () => {
+      mockJWTService.verifyAsync.mockResolvedValueOnce({ sid: '00000000-0000-0000-0000-000000000000' });
+      mockAuthRepository.findById.mockResolvedValueOnce({
+        ...mockRepositoryAuthResult,
+        expiresAt: new Date(),
+      });
+      mockHasherService.compare.mockResolvedValueOnce(true);
+      mockUserRepository.findById.mockResolvedValueOnce(mockRepositoryUserResult);
+      mockJWTService.signAsync.mockResolvedValueOnce('accessToken').mockResolvedValueOnce('refreshToken');
+      mockHasherService.hash.mockResolvedValue('hashed_refreshtoken');
+      mockAuthRepository.update.mockResolvedValue(mockRepositoryAuthResult);
+
+      const result = await service.refresh('refreshToken');
+      expect(result).toEqual(mockServiceAuthResponse);
+
+      expect(mockJWTService.verifyAsync).toHaveBeenCalled();
+      expect(mockAuthRepository.findById).toHaveBeenCalled();
+      expect(mockHasherService.compare).toHaveBeenCalled();
+      expect(mockUserRepository.findById).toHaveBeenCalled();
+      expect(mockJWTService.signAsync).toHaveBeenCalledTimes(2);
+      expect(mockHasherService.hash).toHaveBeenCalled();
+      expect(mockAuthRepository.update).toHaveBeenCalled();
+    });
+  })
+
+  describe('logout', () => {
+    it('should early return', async () => {
+      mockJWTService.verifyAsync.mockRejectedValueOnce(new Error('Invalid token'));
+
+      await service.logout('refreshToken');
+
+      expect(mockJWTService.verifyAsync).toHaveBeenCalled();
+    });
+    
+    it('should revoke session', async () => {
+      mockJWTService.verifyAsync.mockResolvedValueOnce({ sid: '00000000-0000-0000-0000-000000000000' });
+      mockAuthRepository.update.mockResolvedValue(mockRepositoryAuthResult);
+
+      await service.logout('refreshToken');
+
+      expect(mockJWTService.verifyAsync).toHaveBeenCalled();
+      expect(mockAuthRepository.update).toHaveBeenCalled();
     });
   })
 });

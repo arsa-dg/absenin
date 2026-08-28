@@ -8,14 +8,22 @@ describe('AuthController', () => {
 
   const mockService = {
     login: jest.fn(),
+    refresh: jest.fn(),
+    logout: jest.fn(),
   }
+  const mockRequest = {
+    cookies: { refresh_token: 'refreshToken' },
+  };
   const mockResponse = {
     cookie: jest.fn(),
+    clearCookie: jest.fn(),
+    status: jest.fn().mockReturnThis(),
+    json: jest.fn().mockImplementation((data) => data),
   };
 
   const mockAuthResponse: AuthResponseDto = {
-    accessToken: 'accesstoken',
-    refreshToken: 'refrestoken',
+    accessToken: 'accessToken',
+    refreshToken: 'refreshToken',
   }
 
   beforeEach(async () => {
@@ -45,9 +53,37 @@ describe('AuthController', () => {
       await controller.login(loginDto, mockResponse as any);
 
       expect(mockService.login).toHaveBeenCalledWith(loginDto);
-      expect(
-        mockResponse.cookie,
-      ).toHaveBeenCalledTimes(2);
+      expect(mockResponse.cookie).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('refresh', () => {
+    it('should unauthorized when refresh token is missing', async () => {
+      await controller.refresh({cookies: {}} as any, mockResponse as any);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(401);
+      expect(mockService.refresh).not.toHaveBeenCalled();
+      expect(mockResponse.cookie).not.toHaveBeenCalled();
+    });
+    
+    it('should set auth cookies', async () => {
+      mockService.refresh.mockResolvedValue(mockAuthResponse);
+
+      await controller.refresh(mockRequest as any, mockResponse as any);
+
+      expect(mockService.refresh).toHaveBeenCalledWith('refreshToken');
+      expect(mockResponse.cookie).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('logout', () => {
+    it('should clear cookies', async () => {
+      mockService.logout.mockResolvedValue(mockAuthResponse);
+
+      await controller.logout(mockRequest as any, mockResponse as any);
+
+      expect(mockService.logout).toHaveBeenCalledWith('refreshToken');
+      expect(mockResponse.clearCookie).toHaveBeenCalledTimes(2);
     });
   });
 });
