@@ -52,12 +52,12 @@ export class UserService {
       service: 'attendance-service',
       action: 'PROFILE_UPDATE',
       userId: id,
-      timestamp: new Date().toISOString(),
+      occurredAt: new Date().toISOString(),
       updatedFields,
       changes,
-    })
+    });
 
-    return this.toUserResponse(user)
+    return this.toUserResponse(user);
   }
 
   private toChangesAndUpdatedFields(data: Record<string, any> | null | undefined): { 
