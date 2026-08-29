@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { AuthRepository } from './auth.repository';
 import { UserRepository } from '../user/user.repository';
-import { HasherService } from '../hasher/hasher.service';
+import { HasherService } from '../common/hasher/hasher.service';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../user/user.entity';
 import { UserRole } from '../user/user.constant';

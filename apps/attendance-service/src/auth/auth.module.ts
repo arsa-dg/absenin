@@ -8,7 +8,7 @@ import { UserModule } from '../user/user.module';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './auth.strategy';
-import { HasherModule } from '../hasher/hasher.module';
+import { HasherModule } from '../common/hasher/hasher.module';
 
 @Module({
   imports: [

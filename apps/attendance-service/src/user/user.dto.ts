@@ -33,6 +33,10 @@ export class UserResponseDto {
   updatedAt!: Date;
 }
 
+export class FindAllUserResponseDto {
+  users!: UserResponseDto[];
+}
+
 export class UpdateUserDto {
   @IsOptional()
   @IsString()

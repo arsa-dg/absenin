@@ -19,6 +19,7 @@ describe('UserController', () => {
     phone: '6281234567890',
     position: 'someposition',
     photoURL: 'somephotokey',
+    role: 'USER',
     createdAt: new Date('2026-08-25T10:00:00Z'),
     updatedAt: new Date('2026-08-25T10:00:00Z'),
   };

@@ -5,7 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
-import { HasherModule } from './hasher/hasher.module';
+import { HasherModule } from './common/hasher/hasher.module';
 import { AttendanceModule } from './attendance/attendance.module';
 
 @Module({
