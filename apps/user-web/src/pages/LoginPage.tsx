@@ -46,7 +46,7 @@ export default function LoginPage() {
 
   return (
     <div className="h-full min-h-[calc(100vh-4rem)] flex items-center justify-center">
-      <Card className="w-full max-w-xl p-6">
+      <Card className="w-full max-w-xl p-6 flex flex-col gap-6">
         <h2 className="text-2xl font-bold text-slate-800 text-center">Absenin</h2>
         
         {error && (

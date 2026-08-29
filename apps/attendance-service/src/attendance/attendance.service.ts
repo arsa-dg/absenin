@@ -36,7 +36,7 @@ export class AttendanceService {
     
     const result = await this.attendanceRepository.update(todayAttendance.id, { clockOut: now });
     if (!result) {
-      throw new NotFoundException('Attendance not found')
+      throw new NotFoundException('Attendance not found');
     }
 
     return this.toAttendanceResponseDto(result);
