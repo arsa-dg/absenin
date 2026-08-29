@@ -7,17 +7,18 @@ import 'multer';
 export class MinioService implements OnModuleInit {
   private minioClient!: Minio.Client;
   private readonly bucketName = 'photos';
-  private readonly minioHost = 'localhost';
-  private readonly minioPort = 9000;
+  private readonly minioHost = process.env.MINIO_ENDPOINT || 'localhost';
+  private readonly minioPort = Number(process.env.MINIO_PORT) || 9000;
   private readonly useSSL = false;
+  private readonly publicUrl = process.env.MINIO_PUBLIC_URL || 'http://localhost:9000';
 
   async onModuleInit() {
     this.minioClient = new Minio.Client({
       endPoint: this.minioHost,
       port: this.minioPort,
       useSSL: this.useSSL,
-      accessKey: 'minioadmin',
-      secretKey: 'minioadmin',
+      accessKey: process.env.MINIO_ACCESS_KEY || 'minioadmin',
+      secretKey: process.env.MINIO_SECRET_KEY || 'minioadmin',
     });
 
     await this.ensureBucketWithPublicPolicy();
@@ -69,7 +70,6 @@ export class MinioService implements OnModuleInit {
   }
 
   getPublicUrl(fileName: string): string {
-    const protocol = this.useSSL ? 'https' : 'http';
-    return `${protocol}://${this.minioHost}:${this.minioPort}/${this.bucketName}/${fileName}`;
+    return `${this.publicUrl}/${this.bucketName}/${fileName}`;
   }
 }

@@ -92,10 +92,7 @@ export class UserService {
     }
 
     const fileName = await this.minioService.uploadPhoto(data);
-    const publicUrl = this.minioService.getPublicUrl(fileName);
-    const updateData: Partial<User> = {
-      photoKey: publicUrl,
-    }
+    const updateData: Partial<User> = { photoKey: fileName }
     
     const updatedUser = await this.userRepository.update(id, updateData);
     if (!updatedUser) {
@@ -152,7 +149,7 @@ export class UserService {
       name: user.name,
       phone: user.phone,
       position: user.position,
-      photoURL: user.photoKey,
+      photoURL: user.photoKey ? this.minioService.getPublicUrl(user.photoKey) : null,
       role: user.role,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt

@@ -1,4 +1,7 @@
 services:
+  # ==========================================
+  # DATABASES & INFRASTRUCTURE
+  # ==========================================
   absenin-postgres:
     image: postgres:18-alpine
     container_name: absenin-postgres
@@ -10,6 +13,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -64,6 +68,86 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  # ==========================================
+  # BACKEND MICROSERVICES
+  # ==========================================
+  attendance-service:
+    build:
+      context: ./apps/attendance-service
+      dockerfile: Dockerfile
+    container_name: attendance-service
+    ports:
+      - "8000:8000"
+    environment:
+      PORT: 8000
+      POSTGRES_HOST: absenin-postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DATABASE: attendance_postgres
+      JWT_ACCESS_SECRET: change-me-access
+      JWT_REFRESH_SECRET: change-me-refresh
+      JWT_ACCESS_EXPIRES_IN: 15m
+      JWT_REFRESH_EXPIRES_IN: 7d
+      RABBITMQ_URL: amqp://guest:guest@absenin-rabbitmq:5672
+      MINIO_ENDPOINT: absenin-minio
+      MINIO_PORT: 9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_PUBLIC_URL: http://localhost:9000
+    depends_on:
+      absenin-postgres:
+        condition: service_healthy
+      absenin-rabbitmq:
+        condition: service_healthy
+      absenin-minio:
+        condition: service_healthy
+
+  logging-service:
+    build:
+      context: ./apps/logging-service
+      dockerfile: Dockerfile
+    container_name: logging-service
+    environment:
+      POSTGRES_HOST: absenin-postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DATABASE: log_postgres
+      RABBITMQ_URL: amqp://guest:guest@absenin-rabbitmq:5672
+    depends_on:
+      absenin-postgres:
+        condition: service_healthy
+      absenin-rabbitmq:
+        condition: service_healthy
+
+  # ==========================================
+  # FRONTEND WEB APPS
+  # ==========================================
+  user-web:
+    build:
+      context: ./apps/user-web
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:8000
+    container_name: user-web
+    ports:
+      - "3000:80"
+    depends_on:
+      - attendance-service
+
+  admin-web:
+    build:
+      context: ./apps/admin-web
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:8000
+    container_name: admin-web
+    ports:
+      - "3001:80"
+    depends_on:
+      - attendance-service
 
 volumes:
   postgres_data:

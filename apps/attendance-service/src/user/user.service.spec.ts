@@ -122,6 +122,7 @@ describe('UserService', () => {
       mockRepository.findByEmail.mockResolvedValue(null);
       mockHasherService.hash.mockResolvedValue('hashed_somepassword');
       mockRepository.create.mockResolvedValue(mockRepositoryUserResult);
+      mockMinioService.getPublicUrl.mockReturnValue('somephotokey');
 
       const result = await service.create(createUserDto);
       expect(result).toEqual(mockServiceUserResponse);
@@ -132,6 +133,7 @@ describe('UserService', () => {
         ...createUserDto,
         password: 'hashed_somepassword',
       });
+      expect(mockMinioService.getPublicUrl).toHaveBeenCalled();
     });
   })
 
@@ -148,11 +150,13 @@ describe('UserService', () => {
     
     it('should return user when user exists', async () => {
       mockRepository.findById.mockResolvedValue(mockRepositoryUserResult);
+      mockMinioService.getPublicUrl.mockReturnValue('somephotokey');
 
       const result = await service.findById('00000000-0000-0000-0000-000000000000');
       expect(result).toEqual(mockServiceUserResponse);
 
       expect(mockRepository.findById).toHaveBeenCalledWith('00000000-0000-0000-0000-000000000000');
+      expect(mockMinioService.getPublicUrl).toHaveBeenCalled();
     });
   });
 
@@ -169,12 +173,14 @@ describe('UserService', () => {
     
     it('should return user when user exists', async () => {
       mockRepository.update.mockResolvedValue(mockRepositoryUserResult);
+      mockMinioService.getPublicUrl.mockReturnValue('somephotokey');
 
       const result = await service.update('00000000-0000-0000-0000-000000000000', updateUserDto);
       expect(result).toEqual(mockServiceUserResponse);
 
       expect(mockRepository.update).toHaveBeenCalledWith('00000000-0000-0000-0000-000000000000', updateUserDto);
       expect(mockLogClient.emit).toHaveBeenCalled();
+      expect(mockMinioService.getPublicUrl).toHaveBeenCalled();
     });
   });
 });

@@ -1,4 +1,4 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import type { MigrationInterface, QueryRunner } from "typeorm";
 
 export class AlterAttendanceIndex1787913037810 implements MigrationInterface {
     name = 'AlterAttendanceIndex1787913037810'
