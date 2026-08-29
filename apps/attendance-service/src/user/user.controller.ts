@@ -14,6 +14,12 @@ export class UserController {
     private readonly userService: UserService,
   ) {}
 
+  @Get()
+  @Roles(UserRole.ADMIN)
+  findAll() {
+    return this.userService.findAll();
+  }
+
   @Get('/me')
   profile(
     @CurrentUser('userId') userId: string

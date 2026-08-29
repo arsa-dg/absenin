@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, Inject, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { UserRepository } from './user.repository';
-import { CreateUserDto, UpdatePasswordDto, UpdateUserDto, UserResponseDto } from './user.dto';
+import { CreateUserDto, FindAllUserResponseDto, UpdatePasswordDto, UpdateUserDto, UserResponseDto } from './user.dto';
 import { User } from './user.entity';
 import { HasherService } from '../hasher/hasher.service';
 import { ClientProxy } from '@nestjs/microservices';
@@ -32,6 +32,11 @@ export class UserService {
     }
 
     return this.toUserResponse(user);
+  }
+
+  async findAll(): Promise<FindAllUserResponseDto> {
+    const users = await this.userRepository.findAll();
+    return this.toFindAllUserResponseDto(users)
   }
 
   async findById(id: string): Promise<UserResponseDto> {
@@ -144,5 +149,12 @@ export class UserService {
       createdAt: user.createdAt,
       updatedAt: user.updatedAt
     };
+  }
+
+  private toFindAllUserResponseDto(users: User[]): FindAllUserResponseDto {
+    const res: UserResponseDto[] = users.map((user: User): UserResponseDto => this.toUserResponse(user))
+    return {
+      users: res,
+    }
   }
 }
