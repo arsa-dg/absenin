@@ -5,7 +5,8 @@ import { ConflictException, InternalServerErrorException, NotFoundException } fr
 import { User } from './user.entity';
 import { CreateUserDto, UpdateUserDto, UserResponseDto } from './user.dto';
 import { UserRole } from './user.constant';
-import { HasherService } from '../hasher/hasher.service';
+import { HasherService } from '../common/hasher/hasher.service';
+import { MinioService } from '../common/minio/minio.service';
 
 describe('UserService', () => {
   let service: UserService;
@@ -21,6 +22,10 @@ describe('UserService', () => {
   }
   const mockLogClient = {
     emit: jest.fn(),
+  }
+  const mockMinioService = {
+    uploadPhoto: jest.fn(),
+    getPublicUrl: jest.fn(),
   }
 
   const mockRepositoryUserResult: User = {
@@ -42,6 +47,7 @@ describe('UserService', () => {
     phone: '6281234567890',
     position: 'someposition',
     photoURL: 'somephotokey',
+    role: 'USER',
     createdAt: new Date('2026-08-25T10:00:00Z'),
     updatedAt: new Date('2026-08-25T10:00:00Z'),
   }
@@ -66,6 +72,10 @@ describe('UserService', () => {
         {
           provide: 'LOG_SERVICE',
           useValue: mockLogClient,
+        },
+        {
+          provide: MinioService,
+          useValue: mockMinioService,
         },
       ],
     }).compile();

@@ -1,11 +1,11 @@
-import { Body, Controller, FileTypeValidator, Get, MaxFileSizeValidator, Param, ParseFilePipe, ParseUUIDPipe, Patch, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
-
+import { Body, Controller, FileTypeValidator, Get, MaxFileSizeValidator, Param, ParseFilePipe, ParseUUIDPipe, Patch, Post, Sse, UploadedFile, UseGuards, UseInterceptors, MessageEvent } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto, UpdatePasswordDto, UpdateProfileDto, UpdateUserDto } from './user.dto';
 import { JwtAuthGuard, RoleGuard } from '../auth/auth.guard';
 import { CurrentUser, Roles } from '../auth/auth.decorator';
 import { UserRole } from './user.constant';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Observable } from 'rxjs';
 
 @Controller('user')
 @UseGuards(JwtAuthGuard, RoleGuard)
@@ -20,14 +20,20 @@ export class UserController {
     return this.userService.findAll();
   }
 
-  @Get('/me')
+  @Sse('stream')
+  @Roles(UserRole.ADMIN)
+  stream(): Observable<MessageEvent> {
+    return this.userService.getStream();
+  }
+  
+  @Get('me')
   profile(
     @CurrentUser('userId') userId: string
   ) {
     return this.userService.findById(userId);
   }
 
-  @Patch('/me')
+  @Patch('me')
   updateProfile(
     @CurrentUser('userId') userId: string,
     @Body()
@@ -36,7 +42,7 @@ export class UserController {
     return this.userService.update(userId, this.toUpdatedUserDto(data));
   }
 
-  @Patch('/me/password')
+  @Patch('me/password')
   updatePassword(
     @CurrentUser('userId') userId: string,
     @Body()
@@ -45,7 +51,7 @@ export class UserController {
     return this.userService.updatePassword(userId, data);
   }
 
-  @Patch('/me/photo')
+  @Patch('me/photo')
   @UseInterceptors(FileInterceptor('file'))
   uploadPhoto(
     @CurrentUser('userId') userId: string,

@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { AuthRepository } from './auth.repository';
 import { AuthResponseDto, LoginDto } from './auth.dto';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
-import { HasherService } from '../hasher/hasher.service';
+import { HasherService } from '../common/hasher/hasher.service';
 import { UserRepository } from '../user/user.repository';
 import { randomUUID } from 'crypto';
 
