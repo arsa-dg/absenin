@@ -28,6 +28,7 @@ export class UserResponseDto {
   phone?: string | null;
   position?: string | null;
   photoURL?: string | null;
+  role!: string;
   createdAt!: Date;
   updatedAt!: Date;
 }
@@ -46,4 +47,17 @@ export class UpdateUserDto {
   @IsString()
   @MaxLength(30)
   position?: string;
+}
+
+export class UpdateProfileDto {
+  @IsPhoneNumber()
+  phone!: string;
+}
+
+export class UpdatePasswordDto {
+  @IsString()
+  oldPassword!: string;
+
+  @IsString()
+  newPassword!: string;
 }

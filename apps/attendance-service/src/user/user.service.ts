@@ -1,9 +1,10 @@
-import { ConflictException, Inject, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Inject, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { UserRepository } from './user.repository';
-import { CreateUserDto, UpdateUserDto, UserResponseDto } from './user.dto';
+import { CreateUserDto, UpdatePasswordDto, UpdateUserDto, UserResponseDto } from './user.dto';
 import { User } from './user.entity';
 import { HasherService } from '../hasher/hasher.service';
 import { ClientProxy } from '@nestjs/microservices';
+import { MinioService } from 'src/common/minio/minio.service';
 
 @Injectable()
 export class UserService {
@@ -11,6 +12,7 @@ export class UserService {
     private readonly userRepository: UserRepository,
     private readonly hasherService: HasherService,
     @Inject('LOG_SERVICE') private readonly logClient: ClientProxy,
+    private readonly minioService: MinioService,
   ) {}
 
   async create(data: CreateUserDto): Promise<UserResponseDto> {
@@ -47,17 +49,66 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
 
+    this.emitLog(id, data);
+    return this.toUserResponse(user);
+  }
+
+  async updatePassword(id: string, data: UpdatePasswordDto): Promise<UserResponseDto> {
+    const user = await this.userRepository.findById(id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const validPassword = await this.hasherService.compare(data.oldPassword, user.password)
+    if (!validPassword) {
+      throw new BadRequestException('Invalid old password')
+    }
+
+    const newPassword = await this.hasherService.hash(data.newPassword);
+    const updateData: Partial<User> = {
+      password: newPassword,
+    }
+
+    const updatedUser = await this.userRepository.update(id, updateData);
+    if (!updatedUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    this.emitLog(id, updateData);
+    return this.toUserResponse(updatedUser);
+  }
+
+  async updatePhoto(id: string, data: Express.Multer.File): Promise<UserResponseDto> {
+    const user = await this.userRepository.findById(id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const fileName = await this.minioService.uploadPhoto(data);
+    const publicUrl = this.minioService.getPublicUrl(fileName);
+    const updateData: Partial<User> = {
+      photoKey: publicUrl,
+    }
+    
+    const updatedUser = await this.userRepository.update(id, updateData);
+    if (!updatedUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    this.emitLog(id, updateData);
+    return this.toUserResponse(updatedUser);
+  }
+
+  private emitLog(userId: string, data: Record<string, any> | null | undefined) {
     const { changes, updatedFields } = this.toChangesAndUpdatedFields(data);
     this.logClient.emit('PROFILE_UPDATE', {
       service: 'attendance-service',
       action: 'PROFILE_UPDATE',
-      userId: id,
+      userId: userId,
       occurredAt: new Date().toISOString(),
-      updatedFields,
-      changes,
+      updatedFields: updatedFields,
+      changes: changes,
     });
-
-    return this.toUserResponse(user);
   }
 
   private toChangesAndUpdatedFields(data: Record<string, any> | null | undefined): { 
@@ -70,7 +121,7 @@ export class UserService {
 
     const changes = Object.entries(data).reduce((acc, [key, value]) => {
       if (value !== undefined && value !== null) {
-        acc[key] = value;
+        acc[key] = key === 'password' ? '**MASKED**' : value;
       }
       return acc;
     }, {} as Record<string, any>);
@@ -88,7 +139,8 @@ export class UserService {
       name: user.name,
       phone: user.phone,
       position: user.position,
-      photoURL: user.photoKey, // todo: transform to url
+      photoURL: user.photoKey,
+      role: user.role,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt
     };

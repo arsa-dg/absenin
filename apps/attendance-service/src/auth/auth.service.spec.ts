@@ -62,6 +62,8 @@ describe('AuthService', () => {
     refreshToken: 'refreshToken',
   }
 
+  const futureDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -159,7 +161,7 @@ describe('AuthService', () => {
       mockJWTService.verifyAsync.mockResolvedValueOnce({ sid: '00000000-0000-0000-0000-000000000000' });
       mockAuthRepository.findById.mockResolvedValueOnce({
         ...mockRepositoryAuthResult,
-        expiresAt: new Date(),
+        expiresAt: futureDate,
       });
       mockHasherService.compare.mockResolvedValueOnce(false);
 
@@ -174,7 +176,7 @@ describe('AuthService', () => {
       mockJWTService.verifyAsync.mockResolvedValueOnce({ sid: '00000000-0000-0000-0000-000000000000' });
       mockAuthRepository.findById.mockResolvedValueOnce({
         ...mockRepositoryAuthResult,
-        expiresAt: new Date(),
+        expiresAt: futureDate,
       });
       mockHasherService.compare.mockResolvedValueOnce(true);
       mockUserRepository.findById.mockResolvedValueOnce(null);
@@ -191,7 +193,7 @@ describe('AuthService', () => {
       mockJWTService.verifyAsync.mockResolvedValueOnce({ sid: '00000000-0000-0000-0000-000000000000' });
       mockAuthRepository.findById.mockResolvedValueOnce({
         ...mockRepositoryAuthResult,
-        expiresAt: new Date(),
+        expiresAt: futureDate,
       });
       mockHasherService.compare.mockResolvedValueOnce(true);
       mockUserRepository.findById.mockResolvedValueOnce(mockRepositoryUserResult);

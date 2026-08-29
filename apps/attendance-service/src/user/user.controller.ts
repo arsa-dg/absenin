@@ -1,10 +1,11 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, FileTypeValidator, Get, MaxFileSizeValidator, Param, ParseFilePipe, ParseUUIDPipe, Patch, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 
 import { UserService } from './user.service';
-import { CreateUserDto, UpdateUserDto } from './user.dto';
+import { CreateUserDto, UpdatePasswordDto, UpdateProfileDto, UpdateUserDto } from './user.dto';
 import { JwtAuthGuard, RoleGuard } from '../auth/auth.guard';
-import { Roles } from '../auth/auth.decorator';
+import { CurrentUser, Roles } from '../auth/auth.decorator';
 import { UserRole } from './user.constant';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('user')
 @UseGuards(JwtAuthGuard, RoleGuard)
@@ -12,6 +13,48 @@ export class UserController {
   constructor(
     private readonly userService: UserService,
   ) {}
+
+  @Get('/me')
+  profile(
+    @CurrentUser('userId') userId: string
+  ) {
+    return this.userService.findById(userId);
+  }
+
+  @Patch('/me')
+  updateProfile(
+    @CurrentUser('userId') userId: string,
+    @Body()
+    data: UpdateProfileDto,
+  ) {
+    return this.userService.update(userId, this.toUpdatedUserDto(data));
+  }
+
+  @Patch('/me/password')
+  updatePassword(
+    @CurrentUser('userId') userId: string,
+    @Body()
+    data: UpdatePasswordDto,
+  ) {
+    return this.userService.updatePassword(userId, data);
+  }
+
+  @Patch('/me/photo')
+  @UseInterceptors(FileInterceptor('file'))
+  uploadPhoto(
+    @CurrentUser('userId') userId: string,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
+          new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/ }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+  ) {
+    return this.userService.updatePhoto(userId, file);
+  }
 
   @Post()
   @Roles(UserRole.ADMIN)
@@ -38,5 +81,11 @@ export class UserController {
     data: UpdateUserDto,
   ) {
     return this.userService.update(id, data);
+  }
+
+  private toUpdatedUserDto(user: UpdateProfileDto): UpdateUserDto {
+    return {
+      phone: user.phone,
+    }
   }
 }
