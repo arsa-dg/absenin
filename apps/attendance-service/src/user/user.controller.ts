@@ -3,7 +3,7 @@ import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, UseGuards } f
 import { UserService } from './user.service';
 import { CreateUserDto, UpdateUserDto } from './user.dto';
 import { JwtAuthGuard, RoleGuard } from '../auth/auth.guard';
-import { Roles } from '../auth/auth.decorator';
+import { CurrentUser, Roles } from '../auth/auth.decorator';
 import { UserRole } from './user.constant';
 
 @Controller('user')
@@ -12,6 +12,13 @@ export class UserController {
   constructor(
     private readonly userService: UserService,
   ) {}
+
+  @Get('/me')
+  async profile(
+    @CurrentUser('userId') userId: string
+  ) {
+    return this.userService.findById(userId);
+  }
 
   @Post()
   @Roles(UserRole.ADMIN)

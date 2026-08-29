@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { AttendanceRepository } from './attendance.repository';
 import { AttendanceResponseDto, GetAllAttendanceRequestDto, GetAllAttendanceResponseDto } from './attendance.dto';
 import { Attendance } from './attendance.entity';
@@ -10,18 +10,18 @@ export class AttendanceService {
     private readonly attendanceRepository: AttendanceRepository,
   ) {}
 
-  async create(userId: string) {
+  async create(userId: string): Promise<AttendanceResponseDto> {
     const now = new Date();
 
     const todayAttendance = await this.attendanceRepository.findByUserIdDate(userId, now);
     if (!todayAttendance) {
       try {
-        await this.attendanceRepository.create({
+        const result = await this.attendanceRepository.create({
           userId,
           date: now,
           clockIn: now,
         });
-        return;
+        return this.toAttendanceResponseDto(result);
       } catch (error: any) {
         if (error?.code === '23505') {
           throw new ConflictException('Attendance record already created for today.');
@@ -34,7 +34,12 @@ export class AttendanceService {
       throw new BadRequestException('You have already clocked out for today')
     }
     
-    await this.attendanceRepository.update(todayAttendance.id, { clockOut: now });
+    const result = await this.attendanceRepository.update(todayAttendance.id, { clockOut: now });
+    if (!result) {
+      throw new NotFoundException('Attendance not found')
+    }
+
+    return this.toAttendanceResponseDto(result);
   }
 
   async findAll(
@@ -60,6 +65,18 @@ export class AttendanceService {
       endDate,
     )
     return this.toGetAllAttendanceResponseDto(currentUser.role, targetUserId, attendances);
+  }
+
+  private toAttendanceResponseDto(attendance: Attendance): AttendanceResponseDto {
+    const res: AttendanceResponseDto = {
+      date: attendance.date,
+      clockIn: attendance.clockIn
+    }
+    if (attendance.clockOut) {
+      res.clockOut = attendance.clockOut
+    }
+
+    return res
   }
 
   private toGetAllAttendanceResponseDto(

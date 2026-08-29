@@ -12,11 +12,10 @@ export class AttendanceController {
   ) {}
 
   @Post()
-  async create(
+  create(
     @CurrentUser('userId') userId: string
   ) {
-    await this.attendanceService.create(userId);
-    return { message:"success" }
+    return this.attendanceService.create(userId);
   }
 
   @Get()
