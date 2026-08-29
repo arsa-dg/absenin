@@ -89,14 +89,8 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="h-full min-h-[calc(100vh-4rem)] flex items-center justify-center p-4">
+    <div className="h-full flex items-center justify-center p-4">
       <Card className="w-full max-w-xl p-6 flex flex-col gap-6">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-slate-800 tracking-tight">
-            Profil Pengguna
-          </h2>
-        </div>
-
         {error && (
           <div className="bg-red-50 text-red-800 border border-red-200 p-2.5 rounded text-center font-sans text-xs font-semibold">
             {error}
@@ -111,7 +105,7 @@ export default function ProfilePage() {
 
         <div className="flex flex-col items-center gap-3">
           <div className="relative group">
-            <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-slate-200 bg-slate-100 flex items-center justify-center shadow-sm">
+            <div className="w-48 lg:w-64 h-48 lg:h-64 rounded-full overflow-hidden border-2 border-slate-200 bg-slate-100 flex items-center justify-center shadow-sm">
               {user?.photoURL ? (
                 <img
                   src={user.photoURL}

@@ -64,7 +64,7 @@ export default function SummaryPage() {
   };
 
   return (
-    <div className="h-full min-h-[calc(100vh-4rem)] flex items-center justify-center p-4">
+    <div className="h-full flex items-center justify-center p-4">
       <Card className="w-full max-w-2xl p-6 flex flex-col gap-6">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-slate-800 tracking-tight">
